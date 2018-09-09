@@ -13,8 +13,8 @@ func main() {
 	} else {
 		log.Print(ls)
 	}
-	//ls.Append([]byte("bye all\n"))
-	e, err := ls.GetEntry(5)
+	ls.Append([]byte("bye all\n"))
+	e, err := ls.GetEntry(0)
 	if err != nil {
 		log.Printf("Error while getting entry : %v\n%v", 5, err)
 	}

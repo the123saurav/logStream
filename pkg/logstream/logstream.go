@@ -11,10 +11,10 @@ import (
 
 type logStream struct {
 	appendOffset int64    // where to right next
-	startIndex   uint64   // startindex of file
+	startIndex   int64    // startindex of file
 	file         *os.File // handle to underlying file
 	index        []int64  // map from index to byte offset
-	lastIndex    uint64
+	lastIndex    int64
 	lastEntry    []byte
 }
 
@@ -23,8 +23,8 @@ func (ls logStream) String() string {
 }
 
 func New(path string) (*logStream, error) {
-	var startIn uint64
-	var lastIn uint64
+	var startIn int64
+	var lastIn int64
 	var appendOff int64
 	var fd *os.File
 	lastEntry := []byte{}
@@ -40,9 +40,9 @@ func New(path string) (*logStream, error) {
 			}
 			b := make([]byte, 8)
 			b = append(b, byte(10))
-			binary.BigEndian.PutUint64(b, startIn)
+			binary.BigEndian.PutUint64(b, 0)
 			fd.Write(b)
-			return &logStream{appendOffset: appendOff, startIndex: startIn, file: fd, index: index}, nil
+			return &logStream{appendOffset: appendOff, startIndex: -1, file: fd, index: index, lastIndex: -1}, nil
 		} else {
 			return nil, fmt.Errorf("error while opening file: %v", err)
 		}
@@ -56,7 +56,7 @@ func New(path string) (*logStream, error) {
 	if n != 9 {
 		return nil, errors.New("Unable to read startIndex")
 	}
-	startIn = binary.BigEndian.Uint64(b[:8])
+	startIn = int64(binary.BigEndian.Uint64(b[:8]))
 	currOffset, _ := fd.Seek(0, 1)
 
 	r1 := bufio.NewReader(fd)
@@ -94,11 +94,11 @@ func (ls *logStream) GetLastEntry() []byte {
 	return ls.lastEntry
 }
 
-func (ls *logStream) GetLastIndex() uint64 {
+func (ls *logStream) GetLastIndex() int64 {
 	return ls.lastIndex
 }
 
-func (ls *logStream) GetEntry(in uint64) ([]byte, error) {
+func (ls *logStream) GetEntry(in int64) ([]byte, error) {
 	if in < ls.startIndex || in > ls.lastIndex {
 		return nil, fmt.Errorf("attempt to get out of ranged index: %v", in)
 	}
