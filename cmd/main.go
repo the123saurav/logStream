@@ -13,7 +13,7 @@ func main() {
 	} else {
 		log.Print(ls)
 	}
-	ls.Append([]byte("bye all\n"))
+	ls.Append([]byte("bye all"))
 	e, err := ls.GetEntry(0)
 	if err != nil {
 		log.Printf("Error while getting entry : %v\n%v", 5, err)

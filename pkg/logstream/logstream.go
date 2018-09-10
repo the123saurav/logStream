@@ -9,6 +9,10 @@ import (
 	"os"
 )
 
+const (
+	NewLine = byte(10)
+)
+
 type logStream struct {
 	appendOffset int64    // where to right next
 	startIndex   int64    // startindex of file
@@ -39,7 +43,7 @@ func New(path string) (*logStream, error) {
 				return nil, fmt.Errorf("error while creating file: %v", err)
 			}
 			b := make([]byte, 8)
-			b = append(b, byte(10))
+			b = append(b, NewLine)
 			binary.BigEndian.PutUint64(b, 0)
 			fd.Write(b)
 			return &logStream{appendOffset: appendOff, startIndex: -1, file: fd, index: index, lastIndex: -1}, nil
@@ -79,6 +83,7 @@ func New(path string) (*logStream, error) {
 }
 
 func (ls *logStream) Append(e []byte) error {
+	e = append(e, NewLine)
 	_, err := ls.file.Write(e)
 	if err == nil {
 		ls.lastIndex++
@@ -105,7 +110,7 @@ func (ls *logStream) GetEntry(in int64) ([]byte, error) {
 	offset := ls.index[in-ls.startIndex]
 	ls.file.Seek(offset, 0)
 	r := bufio.NewReader(ls.file)
-	d, err := r.ReadBytes(byte(10))
+	d, err := r.ReadBytes(NewLine)
 	ls.file.Seek(ls.appendOffset, 0)
 	if err != nil {
 		return nil, err
